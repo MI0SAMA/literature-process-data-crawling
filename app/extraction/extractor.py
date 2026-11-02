@@ -191,6 +191,17 @@ class RuleBasedExtractor:
             for table in tables
         )
         context = f"{text} {table_text}".strip()
+        sources = [(text, primary.get("heading", ""), primary.get("locator", ""))]
+        for table in tables:
+            source_text = " ".join(part for part in (table.get("caption", ""), table.get("text", "")) if part)
+            if source_text:
+                sources.append(
+                    (
+                        source_text,
+                        f"Table: {table.get('label') or table.get('caption') or 'table'}",
+                        table.get("locator") or f"document_tables:{table.get('table_id', '')}",
+                    )
+                )
         record_id = f"{paper_key}:R1"
         recipe_id = "R1"
         sample_id = f"{paper_key}:S1"
@@ -245,6 +256,13 @@ class RuleBasedExtractor:
                         status = "derived"
                         note = note or f"converted {raw_unit} -> {normalized_unit}"
             data[field_key] = normalized
+            source_section = primary.get("heading", "")
+            source_locator = primary.get("locator", "")
+            if match_text:
+                for source_text, source_heading, source_locator_candidate in sources:
+                    if match_text in source_text:
+                        source_section, source_locator = source_heading, source_locator_candidate
+                        break
             fields.append(
                 ExtractedField(
                     field_key=field_key,
@@ -254,8 +272,8 @@ class RuleBasedExtractor:
                     normalized_value=float(normalized) if isinstance(normalized, (int, float)) else None,
                     normalized_unit=normalized_unit,
                     evidence_text=_sentence(context, match_text) or match_text,
-                    section=primary.get("heading", ""),
-                    locator=primary.get("locator", ""),
+                    section=source_section,
+                    locator=source_locator,
                     status=status,
                     confidence=0.75 if entity_type == "recipe" else 0.65,
                     entity_type=entity_type,

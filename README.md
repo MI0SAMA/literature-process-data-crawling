@@ -32,7 +32,7 @@
 | 审核页 | `app/review/html.py` | 静态字段+证据并排审核页 |
 | 数据库 | `app/storage.py` | Phase 2/3/4/5 表：检索、文档、章节、recipe、target、evidence、review_queue |
 | CLI | `app/cli.py` | `search`、`ingest`、`extract`、`extract-batch`、`validate`、`export`、`metrics`、`review-html`、`review-set`、`review-field`、`review-resolve` 等 |
-| 测试 | `tests/` | **180 个 unittest** |
+| 测试 | `tests/` | **185 个 unittest** |
 
 ## 快速开始
 
@@ -52,8 +52,9 @@ python -m app.cli extract-batch --db data/structured/corpus.sqlite3 --force
 python -m app.cli validate --db data/structured/corpus.sqlite3
 
 # 4. 六表 Excel
+# 默认 formal approved（只导出 verified recipe/measurement）；审核包用 --mode review
 python -m app.cli export --db data/structured/corpus.sqlite3 `
-  --output data/structured/AlScN_PVD_literature_50.xlsx
+  --mode review --output data/structured/AlScN_PVD_literature_50.xlsx
 
 # 5. 指标与静态审核页
 python -m app.cli metrics --db data/structured/corpus.sqlite3
@@ -82,7 +83,7 @@ python -m app.cli ingest --doi 10.3390/biomimetics11080519 `
 
 最近一次结果（2026-10-29）：
 
-- 单元/集成测试：**180/180 通过**。
+- 单元/集成测试：**185/185 通过**。
 - 阶段 2 live 14 查询 × 2 库：28/28 成功，找回 **19/20**（Recall 0.95），DOI 重复 0。
 - 阶段 3 live 10 篇 OA 全文：**10/10 全文，9/10 方法章节**（目标 ≥9）。
 - 阶段 4–7 语料：**86 篇唯一合法全文，71 篇方法章节，71 条 recipe，13 条性能记录，340 条证据**。
@@ -91,6 +92,7 @@ python -m app.cli ingest --doi 10.3390/biomimetics11080519 `
   [`docs/Phase3_Acceptance_Report.md`](docs/Phase3_Acceptance_Report.md)
 - 阶段 4–7 报告：[`docs/Phases4-7_Implementation_Report.md`](docs/Phases4-7_Implementation_Report.md)
 - 审计修复：[`docs/AUDIT_REMEDIATION.md`](docs/AUDIT_REMEDIATION.md)
+- 2026-11-02 审计修复：[`docs/Audit_20261102_Remediation.md`](docs/Audit_20261102_Remediation.md)
 - 语料清单：[`docs/corpus_50_manifest.csv`](docs/corpus_50_manifest.csv)、
   [`docs/corpus_50_summary.json`](docs/corpus_50_summary.json)
 - 指标：[`docs/extraction_metrics.md`](docs/extraction_metrics.md)

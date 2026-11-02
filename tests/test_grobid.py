@@ -38,6 +38,23 @@ class GrobidTeiTests(unittest.TestCase):
         with self.assertRaises(Exception):
             parse_tei(b"not xml")
 
+    def test_table_keeps_empty_cell_and_caption(self):
+        tei = b"""<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+  <text><body><div><head>Experimental</head>
+    <p>AlScN films.</p>
+    <table><head>Table 1</head>
+      <row><cell>Sample</cell><cell>Al power</cell><cell>Sc power</cell></row>
+      <row><cell>S1</cell><cell></cell><cell>60</cell></row>
+    </table>
+  </div></body></text>
+</TEI>
+"""
+        doc = parse_tei(tei)
+        table = doc.tables[0]
+        self.assertEqual(table.caption, "Table 1")
+        self.assertIn("S1 |  | 60", table.text)
+
 
 if __name__ == "__main__":
     unittest.main()

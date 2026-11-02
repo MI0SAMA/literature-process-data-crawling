@@ -21,18 +21,27 @@ class ExtractionPipeline:
         self.extractor = RuleBasedExtractor()
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self._pending_result: tuple[Path, Path] | None = None
+        self._run_context: dict | None = None
 
     def extract_paper(self, paper_key: str, *, force: bool = False) -> ExtractionResult:
+        self._pending_result = None
+        self._run_context = None
         self.db.begin()
         try:
             result = self._extract_paper(paper_key, force=force)
-        except Exception:
+        except Exception as error:
             self.db.rollback()
+            self._discard_pending()
+            self._log_aborted("failed", f"{type(error).__name__}: {error}")
             raise
         if force and result.status != "extracted":
             self.db.rollback()
-        else:
-            self.db.commit()
+            self._discard_pending()
+            self._log_aborted("rolled_back", "; ".join(result.warnings) or result.status)
+            return result
+        self.db.commit()
+        self._publish_pending()
         return result
 
     def _extract_paper(self, paper_key: str, *, force: bool = False) -> ExtractionResult:
@@ -51,6 +60,12 @@ class ExtractionPipeline:
 
         extraction_id = f"ext_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}_{uuid.uuid4().hex[:8]}"
         started_at = utc_now_iso()
+        self._run_context = {
+            "extraction_id": extraction_id,
+            "paper_key": paper_key,
+            "doi": paper.get("doi"),
+            "started_at": started_at,
+        }
         try:
             result = self.extractor.extract(
                 paper_key=paper_key,
@@ -201,14 +216,24 @@ class ExtractionPipeline:
             keys = keys[:limit]
         results = []
         for key in keys:
-            result = self.extract_paper(key, force=force)
-            summary = {
-                "paper_key": key,
-                "status": result.status,
-                "recipes": len(result.recipes),
-                "evidence": len(result.evidence),
-                "fields": sum(len(recipe.fields) for recipe in result.recipes),
-            }
+            try:
+                result = self.extract_paper(key, force=force)
+                summary = {
+                    "paper_key": key,
+                    "status": result.status,
+                    "recipes": len(result.recipes),
+                    "evidence": len(result.evidence),
+                    "fields": sum(len(recipe.fields) for recipe in result.recipes),
+                }
+            except Exception as error:
+                summary = {
+                    "paper_key": key,
+                    "status": "failed",
+                    "recipes": 0,
+                    "evidence": 0,
+                    "fields": 0,
+                    "error": f"{type(error).__name__}: {error}",
+                }
             results.append(summary)
             print(json.dumps(summary, ensure_ascii=False), flush=True)
         return {
@@ -224,4 +249,44 @@ class ExtractionPipeline:
     def _write_result(self, result: ExtractionResult) -> None:
         safe = re.sub(r"[^A-Za-z0-9_.-]+", "_", result.paper_key)[:120]
         path = self.output_dir / f"{safe}.json"
-        path.write_text(json.dumps(result.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+        temp = path.with_suffix(".json.tmp")
+        temp.write_text(json.dumps(result.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+        self._pending_result = (temp, path)
+
+    def _publish_pending(self) -> None:
+        if self._pending_result:
+            temp, path = self._pending_result
+            temp.replace(path)
+            self._pending_result = None
+
+    def _discard_pending(self) -> None:
+        if self._pending_result:
+            temp, _ = self._pending_result
+            temp.unlink(missing_ok=True)
+            self._pending_result = None
+
+    def _log_aborted(self, status: str, error: str) -> None:
+        context = self._run_context
+        if not context:
+            return
+        try:
+            self.db.save_extraction_run(
+                {
+                    "extraction_id": context["extraction_id"],
+                    "paper_key": context["paper_key"],
+                    "doi": context.get("doi"),
+                    "model": "rule-based",
+                    "prompt_version": "none",
+                    "parser_version": "phase4-rules-v1",
+                    "started_at": context["started_at"],
+                    "finished_at": utc_now_iso(),
+                    "status": status,
+                    "error": error,
+                    "recipes_count": 0,
+                    "evidence_count": 0,
+                    "metadata": {"rolled_back": True},
+                }
+            )
+        except Exception:
+            # Failure logging must not mask the original extraction failure.
+            pass

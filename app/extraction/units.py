@@ -29,6 +29,9 @@ _FLOW = {"sccm": ("sccm", 1.0), "slm": ("sccm", 1000.0), "ml/min": ("sccm", 1.0)
 def parse_numeric(value: str) -> float | None:
     text = (value or "").strip().replace(",", ".")
     text = text.replace("−", "-").replace("–", "-").replace("—", "-")
+    e_notation = re.search(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)\s*[eE]\s*[-+]?\s*\d+", text)
+    if e_notation:
+        return float(re.sub(r"\s+", "", e_notation.group(0)))
     scientific = re.search(r"(\d+(?:\.\d+)?)\s*[×xX]\s*10\s*([\-\^]?)\s*(\d+)", text)
     if scientific:
         exponent = int(scientific.group(3))

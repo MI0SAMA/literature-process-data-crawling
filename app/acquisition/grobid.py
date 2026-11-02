@@ -96,13 +96,14 @@ def parse_tei(tei_bytes: bytes) -> ParsedDocument:
             if local_name(row) != "row":
                 continue
             cells = [element_text(cell) for cell in row if local_name(cell) == "cell"]
-            cells = [cell for cell in cells if cell]
-            if cells:
+            # Keep empty cells: removing them shifts the remaining values into
+            # the wrong column (e.g. S1 |  | 60 becomes S1 | 60).
+            if any(cell.strip() for cell in cells):
                 rows.append(" | ".join(cells))
         tables.append(
             ParsedTable(
                 label=f"Table {index}",
-                caption="",
+                caption=element_text(next((child for child in table if local_name(child) == "head"), None)),
                 text="\n".join(rows),
                 locator=f"tei:table:{index}",
             )

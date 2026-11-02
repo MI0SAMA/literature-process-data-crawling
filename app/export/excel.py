@@ -20,17 +20,46 @@ class ExcelExporter:
         self.schema = json.loads(Path(schema_path).read_text(encoding="utf-8"))
         self.tables = self.schema["tables"]
 
-    def export(self, db: Database, output_path: str | Path) -> str:
+    def export(self, db: Database, output_path: str | Path, *, mode: str = "approved") -> str:
+        if mode not in {"approved", "review", "all"}:
+            raise ValueError("mode must be approved, review, or all")
         output = Path(output_path)
         output.parent.mkdir(parents=True, exist_ok=True)
         workbook = Workbook()
         workbook.remove(workbook.active)
 
         recipes = db.list_recipes()
-        targets = db.list_targets()
-        evidence = db.list_evidence()
-        measurements = [dict(row) for row in db.conn.execute("SELECT * FROM measurements ORDER BY measurement_id")]
+        if mode == "approved":
+            recipes = [recipe for recipe in recipes if recipe.get("review_status") == "verified"]
+        record_ids = {recipe["record_id"] for recipe in recipes}
+        targets = [target for target in db.list_targets() if target.get("record_id") in record_ids]
+        evidence = [item for item in db.list_evidence() if item.get("record_id") in record_ids]
+        measurements = [
+            dict(row) for row in db.conn.execute("SELECT * FROM measurements ORDER BY measurement_id")
+            if row["record_id"] in record_ids
+        ]
+        if mode == "approved":
+            measurements = [
+                item for item in measurements
+                if (json.loads(item.get("data_json") or "{}").get("review_status") == "verified")
+            ]
         self._target_cache = targets
+        self._mode = mode
+        self._blocked_fields: dict[str, set[str]] = {}
+        if mode == "approved":
+            for recipe in recipes:
+                reviews = db.list_field_reviews(recipe["record_id"])
+                self._blocked_fields[recipe["record_id"]] = {
+                    item["field_key"] for item in reviews
+                    if item.get("decision") in {"rejected", "needs_review"}
+                }
+        else:
+            self._blocked_fields = {}
+        if mode == "approved":
+            evidence = [
+                item for item in evidence
+                if item.get("field_key") not in self._blocked_fields.get(item.get("record_id", ""), set())
+            ]
 
         self._write_table(workbook, "工艺记录", self.tables["recipes"], [self._recipe_row(recipe) for recipe in recipes])
         self._write_table(workbook, "靶材明细", self.tables["targets"], [self._target_row(target) for target in targets])
@@ -94,6 +123,8 @@ class ExcelExporter:
     def _recipe_row(self, recipe: dict) -> dict[str, Any]:
         data = recipe.get("data") or {}
         row = dict(data)
+        for blocked in self._blocked_fields.get(recipe.get("record_id"), set()):
+            row.pop(blocked, None)
         row.setdefault("record_id", recipe.get("record_id"))
         row.setdefault("paper_doi", recipe.get("paper_doi"))
         row.setdefault("recipe_id", recipe.get("recipe_id"))

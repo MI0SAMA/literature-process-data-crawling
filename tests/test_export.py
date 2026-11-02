@@ -84,7 +84,7 @@ class ExcelExportTests(unittest.TestCase):
 
     def test_six_sheets_and_key_values(self):
         output = Path(self.tempdir.name) / "literature.xlsx"
-        ExcelExporter().export(self.db, output)
+        ExcelExporter().export(self.db, output, mode="review")
         workbook = load_workbook(output, data_only=True)
         self.assertEqual(
             workbook.sheetnames,
@@ -102,7 +102,7 @@ class ExcelExportTests(unittest.TestCase):
         self.assertEqual(row["审核状态"], "new")
 
         self.db.set_recipe_review_status("doi:10.1234/x:R1", "verified")
-        ExcelExporter().export(self.db, output)
+        ExcelExporter().export(self.db, output, mode="review")
         workbook = load_workbook(output, data_only=True)
         recipes = workbook["工艺记录"]
         headers = [cell.value for cell in recipes[1]]
@@ -118,6 +118,43 @@ class ExcelExportTests(unittest.TestCase):
         self.assertGreater(dictionary.max_row, 100)
         mapping = workbook["原表头映射"]
         self.assertGreater(mapping.max_row, 20)
+
+    def test_approved_export_excludes_rejected_field_and_evidence(self):
+        output = Path(self.tempdir.name) / "approved.xlsx"
+        self.db.save_evidence(
+            {
+                "evidence_id": "doi:10.1234/x:R1:working_pressure_mbar",
+                "record_id": "doi:10.1234/x:R1",
+                "entity_type": "recipe",
+                "entity_id": "doi:10.1234/x:R1",
+                "field_key": "working_pressure_mbar",
+                "paper_doi": "10.1234/x",
+                "source_url": "https://example.org",
+                "source_section": "Experimental",
+                "page_table_figure": "jats:sec:2",
+                "evidence_text": "The working pressure was 0.005 mbar.",
+                "raw_value": "0.005",
+                "raw_unit": "mbar",
+                "normalized_value": 0.005,
+                "normalized_unit": "mbar",
+                "evidence_status": "reported",
+                "derivation_note": None,
+            }
+        )
+        self.db.set_recipe_review_status("doi:10.1234/x:R1", "verified")
+        self.db.record_field_review(
+            "doi:10.1234/x:R1", "working_pressure_mbar", "rejected", "wrong pressure"
+        )
+        ExcelExporter().export(self.db, output, mode="approved")
+        workbook = load_workbook(output, data_only=True)
+        recipes = workbook["工艺记录"]
+        headers = [cell.value for cell in recipes[1]]
+        row = {headers[index]: cell.value for index, cell in enumerate(recipes[2])}
+        self.assertIsNone(row["工作气压(mbar)"])
+        evidence = workbook["证据记录"]
+        evidence_headers = [cell.value for cell in evidence[1]]
+        values = [evidence.cell(row=i, column=evidence_headers.index("证据原文") + 1).value for i in range(2, evidence.max_row + 1)]
+        self.assertNotIn("The working pressure was 0.005 mbar.", values)
 
 
 if __name__ == "__main__":

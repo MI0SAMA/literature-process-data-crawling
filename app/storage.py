@@ -408,6 +408,8 @@ class Database:
     def begin(self) -> None:
         if self._in_transaction:
             raise RuntimeError("transaction already active")
+        if not self.conn.in_transaction:
+            self.conn.execute("BEGIN")
         self._in_transaction = True
 
     def commit(self) -> None:

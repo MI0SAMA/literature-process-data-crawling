@@ -57,6 +57,17 @@ class PerformanceExtractionTests(unittest.TestCase):
         self.assertEqual(measurements[0]["source_scope"], "abstract")
         self.assertTrue(measurements[0]["review_required"])
 
+    def test_leakage_scientific_notation(self):
+        sections = [{
+            "section_type": "results",
+            "heading": "Results",
+            "text": "The leakage current density was 1e-6 A/cm2.",
+            "locator": "p1",
+        }]
+        measurements = extract_measurements("doi:10.1234/leak", "10.1234/leak", sections)
+        leakage = next(item for item in measurements if item["property_key"] == "leakage_J")
+        self.assertAlmostEqual(leakage["property_value"], 1e-6)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -130,6 +130,7 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument("--db", default=DEFAULT_DB)
     export.add_argument("--format", choices=("xlsx",), default="xlsx")
     export.add_argument("--output", default="literature.xlsx")
+    export.add_argument("--mode", choices=("approved", "review", "all"), default="approved")
     export.set_defaults(func=_cmd_export)
 
     validate = subparsers.add_parser("validate", help="run deterministic range/evidence validation")
@@ -393,8 +394,8 @@ def _cmd_extract_batch(args) -> int:
 def _cmd_export(args) -> int:
     db = Database(args.db)
     try:
-        path = ExcelExporter("config/alscn_pvd_schema.json").export(db, args.output)
-        print(json.dumps({"exported": path, "recipes": db.count_recipes(), "evidence": db.count_evidence()}, ensure_ascii=False))
+        path = ExcelExporter("config/alscn_pvd_schema.json").export(db, args.output, mode=args.mode)
+        print(json.dumps({"exported": path, "mode": args.mode, "recipes_total": db.count_recipes(), "evidence_total": db.count_evidence()}, ensure_ascii=False))
         return 0
     finally:
         db.close()

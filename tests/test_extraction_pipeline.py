@@ -94,6 +94,23 @@ class ExtractionPipelineTests(unittest.TestCase):
         self.assertEqual(second["attempted"], 0)
         self.assertEqual(self.db.count_recipes(), 1)
 
+    def test_force_failure_keeps_old_data_and_logs_rollback(self):
+        output = Path(self.tempdir.name) / "extractions"
+        pipeline = ExtractionPipeline(self.db, output_dir=output)
+        pipeline.extract_paper(self.paper_key)
+        old_json = next(output.glob("*.json"))
+        old_text = old_json.read_text(encoding="utf-8")
+        self.db.conn.execute("DELETE FROM document_sections")
+        self.db.conn.commit()
+        result = pipeline.extract_paper(self.paper_key, force=True)
+        self.assertEqual(result.status, "no_deposition_section")
+        self.assertEqual(self.db.count_recipes(), 1)
+        self.assertTrue(old_json.exists())
+        self.assertEqual(old_json.read_text(encoding="utf-8"), old_text)
+        self.assertFalse(list(output.glob("*.json.tmp")))
+        statuses = [run["status"] for run in self.db.list_extraction_runs()]
+        self.assertIn("rolled_back", statuses)
+
 
 if __name__ == "__main__":
     unittest.main()

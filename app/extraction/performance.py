@@ -8,14 +8,14 @@ from app.extraction.models import ExtractedField, ExtractionResult
 from app.extraction.units import parse_numeric
 
 _PATTERNS = [
-    ("Pr", re.compile(r"(?:\bPr\b|remanent\s+polarization)\s*(?:=|of|was|is|:)?\s*(?P<num>\d+(?:\.\d+)?)\s*(?P<unit>µC/cm2|μC/cm2|uC/cm2|C/m2)", re.I)),
-    ("2Pr", re.compile(r"(?:\b2\s*Pr\b|double\s+remanent\s+polarization)\s*(?:=|of|was|is|:)?\s*(?P<num>\d+(?:\.\d+)?)\s*(?P<unit>µC/cm2|μC/cm2|uC/cm2|C/m2)", re.I)),
-    ("Ec", re.compile(r"(?:\bEc\b|coercive\s+field)\s*(?:=|of|was|is|:)?\s*(?P<num>\d+(?:\.\d+)?)\s*(?P<unit>MV/cm|kV/cm|V/cm)", re.I)),
-    ("d33", re.compile(r"(?:\bd33(?:,f)?\b|piezoelectric\s+coefficient)\s*(?:=|of|was|is|:)?\s*(?P<num>\d+(?:\.\d+)?)\s*(?P<unit>pm/V|pC/N)", re.I)),
-    ("FWHM", re.compile(r"(?:\bFWHM\b|full\s+width\s+at\s+half\s+maximum)\s*(?:=|of|was|is|:)?\s*(?P<num>\d+(?:\.\d+)?)\s*(?P<unit>°|degree|deg)", re.I)),
-    ("stress", re.compile(r"(?:residual\s+)?stress\s*(?:=|of|was|is|:)?\s*(?P<num>-?\d+(?:\.\d+)?)\s*(?P<unit>GPa|MPa)", re.I)),
-    ("leakage_J", re.compile(r"(?:leakage\s+current\s+density|current\s+density)\s*(?:=|of|was|is|:)?\s*(?P<num>\d+(?:\.\d+)?)\s*(?P<unit>A/cm2|mA/cm2|µA/cm2|μA/cm2)", re.I)),
-    ("RMS", re.compile(r"(?:RMS\s+roughness|surface\s+roughness)\s*(?:=|of|was|is|:)?\s*(?P<num>\d+(?:\.\d+)?)\s*(?P<unit>nm)", re.I)),
+    ("Pr", re.compile(r"(?:\bPr\b|remanent\s+polarization)\s*(?:=|of|was|is|:)?\s*(?P<num>[-+]?\d+(?:\.\d+)?(?:\s*[eE]\s*[-+]?\s*\d+)?)\s*(?P<unit>µC/cm2|μC/cm2|uC/cm2|C/m2)", re.I)),
+    ("2Pr", re.compile(r"(?:\b2\s*Pr\b|double\s+remanent\s+polarization)\s*(?:=|of|was|is|:)?\s*(?P<num>[-+]?\d+(?:\.\d+)?(?:\s*[eE]\s*[-+]?\s*\d+)?)\s*(?P<unit>µC/cm2|μC/cm2|uC/cm2|C/m2)", re.I)),
+    ("Ec", re.compile(r"(?:\bEc\b|coercive\s+field)\s*(?:=|of|was|is|:)?\s*(?P<num>[-+]?\d+(?:\.\d+)?(?:\s*[eE]\s*[-+]?\s*\d+)?)\s*(?P<unit>MV/cm|kV/cm|V/cm)", re.I)),
+    ("d33", re.compile(r"(?:\bd33(?:,f)?\b|piezoelectric\s+coefficient)\s*(?:=|of|was|is|:)?\s*(?P<num>[-+]?\d+(?:\.\d+)?(?:\s*[eE]\s*[-+]?\s*\d+)?)\s*(?P<unit>pm/V|pC/N)", re.I)),
+    ("FWHM", re.compile(r"(?:\bFWHM\b|full\s+width\s+at\s+half\s+maximum)\s*(?:=|of|was|is|:)?\s*(?P<num>[-+]?\d+(?:\.\d+)?(?:\s*[eE]\s*[-+]?\s*\d+)?)\s*(?P<unit>°|degree|deg)", re.I)),
+    ("stress", re.compile(r"(?:residual\s+)?stress\s*(?:=|of|was|is|:)?\s*(?P<num>[-+]?\d+(?:\.\d+)?(?:\s*[eE]\s*[-+]?\s*\d+)?)\s*(?P<unit>GPa|MPa)", re.I)),
+    ("leakage_J", re.compile(r"(?:leakage\s+current\s+density|current\s+density)\s*(?:=|of|was|is|:)?\s*(?P<num>[-+]?\d+(?:\.\d+)?(?:\s*[eE]\s*[-+]?\s*\d+)?)\s*(?P<unit>A/cm2|mA/cm2|µA/cm2|μA/cm2)", re.I)),
+    ("RMS", re.compile(r"(?:RMS\s+roughness|surface\s+roughness)\s*(?:=|of|was|is|:)?\s*(?P<num>[-+]?\d+(?:\.\d+)?(?:\s*[eE]\s*[-+]?\s*\d+)?)\s*(?P<unit>nm)", re.I)),
 ]
 _UNITS = {
     "µc/cm2": ("µC/cm²", 1.0),

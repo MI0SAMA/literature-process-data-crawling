@@ -64,6 +64,29 @@ class ExtractorTests(unittest.TestCase):
             source_document_id="doc1",
         )
 
+    def test_table_field_locator_is_table_not_primary(self):
+        result = self.extractor.extract(
+            paper_key="doi:10.1234/table",
+            doi="10.1234/table",
+            title="Table source test",
+            year=2026,
+            sections=[section("AlScN films were deposited by sputtering.")],
+            tables=[
+                {
+                    "table_id": "doc1:t0",
+                    "label": "Table S1",
+                    "caption": "Supporting deposition conditions",
+                    "text": "The substrate temperature was 400 C.",
+                    "locator": "jats:table:1",
+                }
+            ],
+            source_url="https://example.org/paper",
+            source_document_id="doc1",
+        )
+        field = next(item for item in result.recipes[0].fields if item.field_key == "substrate_temperature_c")
+        self.assertEqual(field.locator, "jats:table:1")
+        self.assertIn("Table S1", field.section)
+
     def test_core_fields_and_evidence(self):
         result = self.extract()
         self.assertEqual(result.status, "extracted")
