@@ -8,6 +8,7 @@ ranges such as 300–350 °C are preserved.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sqlite3
@@ -73,6 +74,9 @@ def target_power_pairs(material: str, power: str) -> list[dict]:
     power = clean_value(power)
     if not power:
         return []
+    range_match = re.search(r"\d+(?:\.\d+)?\s*[-–—~]\s*\d+(?:\.\d+)?", power)
+    if range_match:
+        return [{"label": material or "unknown", "power": range_match.group(0), "range": True}]
     pairs = []
     for match in re.finditer(r"(AlSc|Al|Sc|Ti|Pt|Mo)?\s*(?:≈|~)?\s*(\d+(?:\.\d+)?)", power):
         label = (match.group(1) or "").strip()
@@ -91,6 +95,12 @@ def target_power_pairs(material: str, power: str) -> list[dict]:
 def parse_gas(text: str) -> dict[str, str]:
     text = clean_value(text)
     out = {}
+    ratio = re.search(r"N2\s*:\s*Ar\s*=\s*(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)", text, re.I)
+    if ratio:
+        return {"N2": ratio.group(1), "Ar": ratio.group(2)}
+    ratio = re.search(r"Ar\s*:\s*N2\s*=\s*(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)", text, re.I)
+    if ratio:
+        return {"Ar": ratio.group(1), "N2": ratio.group(2)}
     for gas in ("N2", "Ar"):
         match = re.search(rf"{gas}\s*[:=]?\s*(\d+(?:\.\d+)?)", text, re.I)
         if not match:
@@ -298,6 +308,7 @@ def main() -> int:
     parser.add_argument("--db", default=str(DB))
     parser.add_argument("--annotator", default=ANNOTATOR)
     parser.add_argument("--apply", action="store_true")
+    parser.add_argument("--replace", action="store_true", help="explicitly archive and replace this annotator's history")
     args = parser.parse_args()
     rows = parse_markdown(Path(args.markdown))
     print(f"papers={len(rows)} recipes={sum(len(r['recipes']) for r in rows)}")
@@ -306,6 +317,9 @@ def main() -> int:
     if not args.apply:
         print("dry-run: pass --apply to write")
         return 0
+    source = Path(args.markdown)
+    source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+    import_run_id = f"import_{source_hash[:12]}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
     db = Path(args.db)
     db.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(db) as con:
@@ -318,14 +332,56 @@ def main() -> int:
                 created_at TEXT NOT NULL
             )"""
         )
-        con.execute("DELETE FROM annotation_actions WHERE annotator=?", (args.annotator,))
-        for row in rows:
+        for column in ("import_run_id TEXT", "source_hash TEXT"):
+            try:
+                con.execute(f"ALTER TABLE annotation_actions ADD COLUMN {column}")
+            except sqlite3.OperationalError:
+                pass
+        con.execute(
+            """CREATE TABLE IF NOT EXISTS annotation_imports (
+                import_run_id TEXT PRIMARY KEY,
+                annotator TEXT NOT NULL,
+                source_hash TEXT NOT NULL,
+                source_name TEXT,
+                tests_count INTEGER NOT NULL,
+                created_at TEXT NOT NULL
+            )"""
+        )
+        existing = con.execute(
+            "SELECT import_run_id FROM annotation_imports WHERE annotator=? AND source_hash=?",
+            (args.annotator, source_hash),
+        ).fetchone()
+        if existing and not args.replace:
+            print(f"already imported source_hash={source_hash[:12]} as {existing[0]}; use --replace to re-import")
+            return 0
+        if args.replace:
             con.execute(
-                "INSERT INTO annotation_actions(test_id, annotator, data_json, created_at) VALUES (?, ?, ?, ?)",
-                (row["test_id"], args.annotator, json.dumps(row, ensure_ascii=False), now()),
+                """CREATE TABLE IF NOT EXISTS annotation_actions_archive AS
+                   SELECT * FROM annotation_actions WHERE 0"""
             )
+            con.execute(
+                """INSERT INTO annotation_actions_archive
+                   SELECT * FROM annotation_actions WHERE annotator=?""",
+                (args.annotator,),
+            )
+            con.execute("DELETE FROM annotation_actions WHERE annotator=?", (args.annotator,))
+        for row in rows:
+            row["import_run_id"] = import_run_id
+            row["source_hash"] = source_hash
+            row["source_name"] = source.name
+            con.execute(
+                """INSERT INTO annotation_actions(
+                       test_id, annotator, data_json, created_at, import_run_id, source_hash
+                   ) VALUES (?, ?, ?, ?, ?, ?)""",
+                (row["test_id"], args.annotator, json.dumps(row, ensure_ascii=False), now(), import_run_id, source_hash),
+            )
+        con.execute(
+            """INSERT INTO annotation_imports(import_run_id, annotator, source_hash, source_name, tests_count, created_at)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (import_run_id, args.annotator, source_hash, source.name, len(rows), now()),
+        )
         con.commit()
-    print(f"wrote {len(rows)} annotations for {args.annotator} to {db}")
+    print(f"wrote {len(rows)} annotations for {args.annotator} to {db}; import_run_id={import_run_id}")
     return 0
 
 

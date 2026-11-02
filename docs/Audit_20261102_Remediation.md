@@ -64,6 +64,24 @@ python -m app.cli export --mode approved --output formal.xlsx
 
 仍缺：漏电流必须绑定测试电场/电压、温度和器件面积，当前只保证数值可抽。
 
+## 2026-11-02 第二轮补充（P0/P1 审查）
+
+- **P0 靶功率 rejected 仍导出**：`_recipe_row` 的靶材回填和 `_target_row` 现在都使用同一
+  `field_reviews` blocked 集合；`target1_power_w` rejected 时，工艺记录和靶材明细同时为空，
+  evidence 同步过滤。新增回归 `test_approved_export_excludes_rejected_target_power`。
+- **P1 commit 异常**：`extract_paper` 将 `commit()` 纳入清理路径；commit 失败 rollback、
+  清理临时 JSON、记录 `commit_failed`，事务标志复位，下一篇可继续。
+  新增回归 `test_commit_failure_resets_transaction_and_next_run_works`。
+- **P1 JSON 发布失败**：extraction_runs 增加 `artifact_status`（pending/published/failed）；
+  发布失败写 `failed`，批次只跳过最新 run 为 `published` 的论文，因此可重试。
+  新增回归 `test_artifact_publish_failure_is_retried`。
+- **P1 导入脚本删除历史**：默认 append-only，加入 `--replace` 显式覆盖；
+  `annotation_imports` 记录 source_hash/import_run_id，重复导入幂等跳过；replace 前写入
+  `annotation_actions_archive`。
+- **P1 范围/气体比例**：`100–200 W` 保留为一条 range target，不再拆成两个靶；
+  `N2:Ar=160:32` 正确映射 N2=160、Ar=32。
+- 当前正式 approved 导出仍为空（71 条 recipe 均 `needs_review`），这是预期。
+
 ## 未完成
 
 - F01：Paper/Recipe/Sample/Step/Layer/Target/Measurement 实体模型与多 Recipe
@@ -77,7 +95,7 @@ python -m app.cli export --mode approved --output formal.xlsx
 
 ```text
 python -m unittest discover -s tests -p "test_*.py"
-Ran 185 tests
+Ran 188 tests
 OK
 ```
 

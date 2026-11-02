@@ -40,8 +40,22 @@ class ExtractionPipeline:
             self._discard_pending()
             self._log_aborted("rolled_back", "; ".join(result.warnings) or result.status)
             return result
-        self.db.commit()
-        self._publish_pending()
+        try:
+            self.db.commit()
+        except Exception as error:
+            self.db.rollback()
+            self._discard_pending()
+            self._log_aborted("commit_failed", f"{type(error).__name__}: {error}")
+            raise
+        try:
+            self._publish_pending()
+            self.db.set_artifact_status(self._run_context["extraction_id"], "published")
+        except Exception as error:
+            self._discard_pending()
+            self.db.set_artifact_status(
+                self._run_context["extraction_id"], "failed", f"artifact publish failed: {type(error).__name__}: {error}"
+            )
+            result.warnings.append(f"artifact publish failed: {type(error).__name__}: {error}")
         return result
 
     def _extract_paper(self, paper_key: str, *, force: bool = False) -> ExtractionResult:
@@ -182,6 +196,7 @@ class ExtractionPipeline:
                 "error": "; ".join(result.warnings) or None,
                 "recipes_count": len(result.recipes),
                 "evidence_count": evidence_count,
+                "artifact_status": "pending",
                 "metadata": result.metadata,
             }
         )
@@ -205,7 +220,14 @@ class ExtractionPipeline:
                 FROM papers p
                 JOIN documents d ON d.paper_key = p.paper_key AND d.is_primary = 1
                 WHERE p.paper_key NOT IN (
-                    SELECT paper_key FROM extraction_runs WHERE status = 'extracted'
+                    SELECT er.paper_key FROM extraction_runs er
+                    WHERE er.extraction_id = (
+                        SELECT e2.extraction_id FROM extraction_runs e2
+                        WHERE e2.paper_key = er.paper_key
+                        ORDER BY e2.started_at DESC, e2.rowid DESC LIMIT 1
+                    )
+                    AND er.status = 'extracted'
+                    AND COALESCE(er.artifact_status, 'published') = 'published'
                 )
                 GROUP BY p.paper_key
                 ORDER BY p.publication_year DESC
@@ -284,6 +306,7 @@ class ExtractionPipeline:
                     "error": error,
                     "recipes_count": 0,
                     "evidence_count": 0,
+                    "artifact_status": "failed",
                     "metadata": {"rolled_back": True},
                 }
             )

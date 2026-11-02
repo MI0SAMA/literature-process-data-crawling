@@ -133,16 +133,24 @@ class ExcelExporter:
         # The DB status is authoritative; data_json may be from an older
         # extraction or may not include a later review-set action.
         row["review_status"] = recipe.get("review_status") or row.get("review_status")
+        blocked = self._blocked_fields.get(recipe.get("record_id"), set())
         for target in self._targets_for(recipe.get("record_id")):
             index = int(target.get("target_index") or 0)
             if index in (1, 2):
                 target_data = target.get("data") or {}
-                row[f"target{index}_material"] = target.get("target_material")
-                row[f"target{index}_composition"] = target_data.get("target_composition")
-                row[f"target{index}_sc_at_pct"] = target_data.get("target_sc_at_pct")
-                row[f"target{index}_power_w"] = target.get("target_power_w")
-                row[f"target{index}_power_mode"] = target_data.get("power_mode")
-                row[f"target{index}_diameter_mm"] = target_data.get("target_diameter_mm")
+                values = {
+                    "material": target.get("target_material"),
+                    "composition": target_data.get("target_composition"),
+                    "sc_at_pct": target_data.get("target_sc_at_pct"),
+                    "power_w": target.get("target_power_w"),
+                    "power_mode": target_data.get("power_mode"),
+                    "diameter_mm": target_data.get("target_diameter_mm"),
+                    "power_basis": target_data.get("power_basis"),
+                    "power_statistic": target_data.get("power_statistic"),
+                    "reported_power_text": target_data.get("reported_power_text"),
+                }
+                for key, value in values.items():
+                    row[f"target{index}_{key}"] = None if f"target{index}_{key}" in blocked else value
         return row
 
     def _targets_for(self, record_id: str | None) -> list[dict]:
@@ -159,6 +167,22 @@ class ExcelExporter:
         row = dict(data)
         for key in ("target_record_id", "record_id", "target_index", "layer_role", "target_material", "target_power_w", "evidence_id"):
             row.setdefault(key, target.get(key))
+        index = int(target.get("target_index") or 0)
+        blocked = self._blocked_fields.get(target.get("record_id"), set())
+        target_to_recipe = {
+            "target_material": f"target{index}_material",
+            "target_composition": f"target{index}_composition",
+            "target_sc_at_pct": f"target{index}_sc_at_pct",
+            "target_power_w": f"target{index}_power_w",
+            "power_mode": f"target{index}_power_mode",
+            "target_diameter_mm": f"target{index}_diameter_mm",
+            "power_basis": f"target{index}_power_basis",
+            "power_statistic": f"target{index}_power_statistic",
+            "reported_power_text": f"target{index}_reported_power_text",
+        }
+        for key, recipe_key in target_to_recipe.items():
+            if recipe_key in blocked:
+                row[key] = None
         return row
 
     def _measurement_row(self, item: dict) -> dict[str, Any]:

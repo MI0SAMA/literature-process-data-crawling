@@ -119,6 +119,27 @@ class ExcelExportTests(unittest.TestCase):
         mapping = workbook["原表头映射"]
         self.assertGreater(mapping.max_row, 20)
 
+    def test_approved_export_excludes_rejected_target_power(self):
+        output = Path(self.tempdir.name) / "target-approved.xlsx"
+        self.db.set_recipe_review_status("doi:10.1234/x:R1", "verified")
+        self.db.record_field_review(
+            "doi:10.1234/x:R1", "target1_power_w", "rejected", "wrong target power"
+        )
+        ExcelExporter().export(self.db, output, mode="approved")
+        workbook = load_workbook(output, data_only=True)
+        recipes = workbook["工艺记录"]
+        headers = [cell.value for cell in recipes[1]]
+        recipe_row = {headers[index]: cell.value for index, cell in enumerate(recipes[2])}
+        self.assertIsNone(recipe_row["靶材1功率(W)"])
+        targets = workbook["靶材明细"]
+        target_headers = [cell.value for cell in targets[1]]
+        target_row = {target_headers[index]: cell.value for index, cell in enumerate(targets[2])}
+        self.assertIsNone(target_row["靶材功率(W)"])
+        evidence = workbook["证据记录"]
+        evidence_headers = [cell.value for cell in evidence[1]]
+        values = [evidence.cell(row=i, column=evidence_headers.index("证据原文") + 1).value for i in range(2, evidence.max_row + 1)]
+        self.assertNotIn("The AlSc target was sputtered at 200 W.", values)
+
     def test_approved_export_excludes_rejected_field_and_evidence(self):
         output = Path(self.tempdir.name) / "approved.xlsx"
         self.db.save_evidence(

@@ -5,6 +5,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from app.discovery.dedup import Deduplicator
 from app.extraction.pipeline import ExtractionPipeline
@@ -110,6 +111,32 @@ class ExtractionPipelineTests(unittest.TestCase):
         self.assertFalse(list(output.glob("*.json.tmp")))
         statuses = [run["status"] for run in self.db.list_extraction_runs()]
         self.assertIn("rolled_back", statuses)
+
+    def test_artifact_publish_failure_is_retried(self):
+        output = Path(self.tempdir.name) / "extractions"
+        pipeline = ExtractionPipeline(self.db, output_dir=output)
+        pipeline.extract_paper(self.paper_key)
+        with patch.object(pipeline, "_publish_pending", side_effect=OSError("disk full")):
+            result = pipeline.extract_paper(self.paper_key, force=True)
+        self.assertEqual(result.status, "extracted")
+        self.assertTrue(any("artifact publish failed" in warning for warning in result.warnings))
+        latest = self.db.list_extraction_runs()[-1]
+        self.assertEqual(latest["artifact_status"], "failed")
+        self.assertFalse(list(output.glob("*.json.tmp")))
+        # A later batch must not skip the paper just because DB commit succeeded.
+        retry = pipeline.extract_batch()
+        self.assertEqual(retry["attempted"], 1)
+
+    def test_commit_failure_resets_transaction_and_next_run_works(self):
+        output = Path(self.tempdir.name) / "extractions"
+        pipeline = ExtractionPipeline(self.db, output_dir=output)
+        with patch.object(self.db, "commit", side_effect=RuntimeError("commit failed")):
+            with self.assertRaises(RuntimeError):
+                pipeline.extract_paper(self.paper_key)
+        self.assertFalse(self.db._in_transaction)
+        result = pipeline.extract_paper(self.paper_key, force=True)
+        self.assertEqual(result.status, "extracted")
+        self.assertEqual(self.db.count_recipes(), 1)
 
 
 if __name__ == "__main__":

@@ -315,6 +315,7 @@ CREATE TABLE IF NOT EXISTS extraction_runs (
     error TEXT,
     recipes_count INTEGER NOT NULL DEFAULT 0,
     evidence_count INTEGER NOT NULL DEFAULT 0,
+    artifact_status TEXT,
     metadata_json TEXT
 );
 
@@ -380,6 +381,10 @@ class Database:
     def init_schema(self) -> None:
         self.conn.executescript(_SCHEMA)
         # Migration for databases created before extraction-version linkage.
+        try:
+            self.conn.execute("ALTER TABLE extraction_runs ADD COLUMN artifact_status TEXT")
+        except sqlite3.OperationalError:
+            pass
         try:
             self.conn.execute("ALTER TABLE review_actions ADD COLUMN extraction_id TEXT")
         except sqlite3.OperationalError:
@@ -1226,14 +1231,15 @@ class Database:
             """
             INSERT INTO extraction_runs(
                 extraction_id, paper_key, doi, model, prompt_version, parser_version,
-                started_at, finished_at, status, error, recipes_count, evidence_count, metadata_json
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                started_at, finished_at, status, error, recipes_count, evidence_count, artifact_status, metadata_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(extraction_id) DO UPDATE SET
                 finished_at=excluded.finished_at,
                 status=excluded.status,
                 error=excluded.error,
                 recipes_count=excluded.recipes_count,
                 evidence_count=excluded.evidence_count,
+                artifact_status=excluded.artifact_status,
                 metadata_json=excluded.metadata_json
             """,
             (
@@ -1249,6 +1255,7 @@ class Database:
                 run.get("error"),
                 int(run.get("recipes_count", 0)),
                 int(run.get("evidence_count", 0)),
+                run.get("artifact_status"),
                 json.dumps(run.get("metadata") or {}, ensure_ascii=False),
             ),
         )
@@ -1498,6 +1505,13 @@ class Database:
         else:
             rows = self.conn.execute("SELECT * FROM evidence ORDER BY record_id, field_key").fetchall()
         return [dict(row) for row in rows]
+
+    def set_artifact_status(self, extraction_id: str, status: str, error: str | None = None) -> None:
+        self.conn.execute(
+            "UPDATE extraction_runs SET artifact_status=?, error=COALESCE(?, error) WHERE extraction_id=?",
+            (status, error, extraction_id),
+        )
+        self._commit()
 
     def list_extraction_runs(self) -> list[dict]:
         rows = self.conn.execute("SELECT * FROM extraction_runs ORDER BY started_at").fetchall()
