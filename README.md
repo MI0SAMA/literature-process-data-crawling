@@ -213,6 +213,13 @@ python tools/annotation_app.py --host 0.0.0.0 --port 8767 --manifest docs/annota
 
 仓库不包含论文 PDF、SQLite、Excel 或标注数据库；这些由本地 `data/` 和 `--manifest` 提供。
 
+已有同事的 Markdown 统计表可导入为某个标注者的记录：
+
+```powershell
+python tools/import_statistical_conditions.py --markdown statistical_conditions.md --annotator majie --apply
+```
+
+
 ## 阶段 8 边界
 
 已完成：批量 arXiv/PMC 获取、批量抽取、六表导出、静态审核页、基础指标。

@@ -72,6 +72,8 @@ def latest_annotation(test_id: str, annotator: str) -> dict | None:
     if not row:
         return None
     data = json.loads(row["data_json"])
+    data["test_id"] = test_id
+    data["annotator"] = annotator
     data["_saved_at"] = row["created_at"]
     return data
 
@@ -224,7 +226,7 @@ function fieldHtml(k,value,textarea=false){
  if(k==="confidence") return `<div><label>${labels[k]}</label><select data-rk="confidence"><option value="">--</option><option>high</option><option>medium</option><option>low</option></select></div>`;
  if(k==="sputtering_mode") return `<div><label>${labels[k]}</label><input data-rk="${k}" value="${v}" placeholder="DC / RF / pulsed DC / HiPIMS"></div>`;
  if(k==="method_detail") return `<div><label>${labels[k]}</label><input data-rk="${k}" value="${v}" placeholder="reactive co-sputtering; pulsed DC"></div>`;
- return `<div><label>${labels[k]}</label><input data-rk="${k}" value="${v}" ${["working_pressure_mbar","base_pressure_mbar","substrate_temperature_c","n2_flow_sccm","ar_flow_sccm","alscn_thickness_nm","deposition_time_min","target_substrate_distance_mm"].includes(k)?'type="number" step="any"':""}></div>`;
+ return `<div><label>${labels[k]}</label><input data-rk="${k}" value="${v}" inputmode="decimal" placeholder="数值或范围，如 300–350"></div>`;
 }
 function addRecipe(data={}){
  const card=document.createElement("div"); card.className="recipe"; card.style="border:1px solid #cfd7e5;border-radius:8px;padding:12px;margin:12px 0;background:#fbfcff";
