@@ -1,0 +1,1363 @@
+{
+  "schema_name": "AlScN PVD Literature Extraction",
+  "schema_version": "1.0.0",
+  "source": "user-provided 147 sample header template",
+  "record_grain": "one explicitly executed recipe or actual sample; one paper can yield many records",
+  "scope": "AlScN functional layer must be prepared via PVD; electrode-only PVD does not qualify",
+  "null_policy": "missing is null, not zero. Explicit zero is allowed. Do not materialize unobserved sweep combinations",
+  "evidence_status": [
+    "reported",
+    "derived",
+    "ambiguous",
+    "not_reported"
+  ],
+  "review_status": [
+    "new",
+    "needs_review",
+    "verified",
+    "rejected"
+  ],
+  "tables": {
+    "recipes": [
+      {
+        "key": "record_id",
+        "label": "工艺记录ID",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "全局唯一；每行对应实际样品或实际执行的工艺配方",
+        "group": "文献与记录"
+      },
+      {
+        "key": "paper_doi",
+        "label": "论文DOI",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "论文主标识；无 DOI 则用来源ID",
+        "group": "文献与记录"
+      },
+      {
+        "key": "paper_title",
+        "label": "论文标题",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "文献与记录"
+      },
+      {
+        "key": "publication_year",
+        "label": "发表年份",
+        "unit": "year",
+        "type": "integer",
+        "priority": "P1",
+        "definition": "",
+        "group": "文献与记录"
+      },
+      {
+        "key": "recipe_id",
+        "label": "论文内工艺ID",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "独立实际沉积配方的稳定ID",
+        "group": "文献与记录"
+      },
+      {
+        "key": "sample_id",
+        "label": "论文内样品ID",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "样品代码，未知时允许系统ID，但不猜测",
+        "group": "文献与记录"
+      },
+      {
+        "key": "record_scope",
+        "label": "记录层级",
+        "unit": "",
+        "type": "enum",
+        "priority": "P0",
+        "definition": "actual_recipe 或 actual_sample；禁止虚构参数组合",
+        "group": "文献与记录"
+      },
+      {
+        "key": "review_status",
+        "label": "审核状态",
+        "unit": "",
+        "type": "enum",
+        "priority": "P0",
+        "definition": "new/needs_review/verified/rejected",
+        "group": "文献与记录"
+      },
+      {
+        "key": "deposition_method",
+        "label": "AlScN沉积方法",
+        "unit": "",
+        "type": "enum",
+        "priority": "P0",
+        "definition": "确认是功能层本身由 PVD 沉积",
+        "group": "沉积方法"
+      },
+      {
+        "key": "sputtering_mode",
+        "label": "溅射模式",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "RF、DC、pulsed DC、AC、HiPIMS 等",
+        "group": "沉积方法"
+      },
+      {
+        "key": "deposition_method_detail",
+        "label": "沉积方法细分",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "如 reactive co-sputtering; pulsed DC + RF；用于区分功率数值的方法语义",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "method_category",
+        "label": "方法主类别",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "DC / RF / pulsed DC / HiPIMS / RF+DC / unknown",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "target_configuration",
+        "label": "靶材配置",
+        "unit": "",
+        "type": "enum",
+        "priority": "P1",
+        "definition": "单合金靶、双靶共溅射、其他",
+        "group": "沉积方法"
+      },
+      {
+        "key": "equipment_model",
+        "label": "设备型号",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "沉积方法"
+      },
+      {
+        "key": "sample_type",
+        "label": "样品类型",
+        "unit": "",
+        "type": "enum",
+        "priority": "P1",
+        "definition": "薄膜、器件或其他",
+        "group": "衬底与薄膜"
+      },
+      {
+        "key": "substrate_material",
+        "label": "衬底材料",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "例如 Si、sapphire",
+        "group": "衬底与薄膜"
+      },
+      {
+        "key": "substrate_orientation",
+        "label": "衬底取向",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "如 Si(100)",
+        "group": "衬底与薄膜"
+      },
+      {
+        "key": "substrate_doping",
+        "label": "衬底掺杂信息",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "衬底与薄膜"
+      },
+      {
+        "key": "substrate_stack",
+        "label": "衬底叠层原文",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "保留完整叠层，另拆主材料和取向",
+        "group": "衬底与薄膜"
+      },
+      {
+        "key": "bottom_electrode_material",
+        "label": "底电极材料",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "衬底与薄膜"
+      },
+      {
+        "key": "bottom_electrode_thickness_nm",
+        "label": "底电极厚度(nm)",
+        "unit": "nm",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "衬底与薄膜"
+      },
+      {
+        "key": "seed_layer_material",
+        "label": "种子/缓冲层材料",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "衬底与薄膜"
+      },
+      {
+        "key": "seed_layer_thickness_nm",
+        "label": "种子/缓冲层厚度(nm)",
+        "unit": "nm",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "衬底与薄膜"
+      },
+      {
+        "key": "alscn_thickness_nm",
+        "label": "AlScN厚度(nm)",
+        "unit": "nm",
+        "type": "number",
+        "priority": "P1",
+        "definition": "仅功能层厚度",
+        "group": "衬底与薄膜"
+      },
+      {
+        "key": "film_sc_at_pct",
+        "label": "薄膜Sc含量(at.%)",
+        "unit": "at.%",
+        "type": "number",
+        "priority": "P1",
+        "definition": "与靶材标称 Sc 成分严格区分",
+        "group": "衬底与薄膜"
+      },
+      {
+        "key": "film_sc_basis",
+        "label": "薄膜Sc含量依据",
+        "unit": "",
+        "type": "enum",
+        "priority": "P1",
+        "definition": "measured/nominal/formula/unknown",
+        "group": "衬底与薄膜"
+      },
+      {
+        "key": "top_electrode_material",
+        "label": "顶电极材料",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "衬底与薄膜"
+      },
+      {
+        "key": "top_electrode_thickness_nm",
+        "label": "顶电极厚度(nm)",
+        "unit": "nm",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "衬底与薄膜"
+      },
+      {
+        "key": "top_electrode_patterning",
+        "label": "顶电极图形化方式",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "衬底与薄膜"
+      },
+      {
+        "key": "target1_material",
+        "label": "靶材1材料",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "Al、Sc、AlSc alloy、AlN 等",
+        "group": "靶材1"
+      },
+      {
+        "key": "target1_composition",
+        "label": "靶材1成分",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "原样保存标称成分",
+        "group": "靶材1"
+      },
+      {
+        "key": "target1_sc_at_pct",
+        "label": "靶材1标称Sc(at.%)",
+        "unit": "at.%",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "靶材1"
+      },
+      {
+        "key": "target1_power_w",
+        "label": "靶材1功率(W)",
+        "unit": "W",
+        "type": "number",
+        "priority": "P1",
+        "definition": "仅该靶材的功率",
+        "group": "靶材1"
+      },
+      {
+        "key": "target1_power_mode",
+        "label": "靶材1电源模式",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "靶材1"
+      },
+      {
+        "key": "target1_power_basis",
+        "label": "靶材1功率语义",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "target_power / sputter_power / power_density / bias_power / etch_power / unknown",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "target1_power_statistic",
+        "label": "靶材1功率统计口径",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "average / peak / rated / unknown；仅记录原文明确口径",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "target1_reported_power_text",
+        "label": "靶材1功率原文",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "保存原文中该功率的短语，避免把 sputter power 当 target power",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "target1_diameter_mm",
+        "label": "靶材1直径(mm)",
+        "unit": "mm",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "靶材1"
+      },
+      {
+        "key": "target2_material",
+        "label": "靶材2材料",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "单靶时留空，不写 0",
+        "group": "靶材2"
+      },
+      {
+        "key": "target2_composition",
+        "label": "靶材2成分",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "靶材2"
+      },
+      {
+        "key": "target2_sc_at_pct",
+        "label": "靶材2标称Sc(at.%)",
+        "unit": "at.%",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "靶材2"
+      },
+      {
+        "key": "target2_power_w",
+        "label": "靶材2功率(W)",
+        "unit": "W",
+        "type": "number",
+        "priority": "P1",
+        "definition": "仅该靶材的功率",
+        "group": "靶材2"
+      },
+      {
+        "key": "target2_power_mode",
+        "label": "靶材2电源模式",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "靶材2"
+      },
+      {
+        "key": "target2_power_basis",
+        "label": "靶材2功率语义",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "target_power / sputter_power / power_density / bias_power / etch_power / unknown",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "target2_power_statistic",
+        "label": "靶材2功率统计口径",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "average / peak / rated / unknown；仅记录原文明确口径",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "target2_reported_power_text",
+        "label": "靶材2功率原文",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "保存原文中该功率的短语，避免把 sputter power 当 target power",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "target2_diameter_mm",
+        "label": "靶材2直径(mm)",
+        "unit": "mm",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "靶材2"
+      },
+      {
+        "key": "n2_flow_sccm",
+        "label": "N2流量(sccm)",
+        "unit": "sccm",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "气体与气压"
+      },
+      {
+        "key": "ar_flow_sccm",
+        "label": "Ar流量(sccm)",
+        "unit": "sccm",
+        "type": "number",
+        "priority": "P1",
+        "definition": "论文明确无 Ar 才能写 0",
+        "group": "气体与气压"
+      },
+      {
+        "key": "other_gas",
+        "label": "其他气体名称",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "气体与气压"
+      },
+      {
+        "key": "other_gas_flow_sccm",
+        "label": "其他气体流量(sccm)",
+        "unit": "sccm",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "气体与气压"
+      },
+      {
+        "key": "base_pressure_mbar",
+        "label": "本底真空度(mbar)",
+        "unit": "mbar",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "气体与气压"
+      },
+      {
+        "key": "working_pressure_mbar",
+        "label": "工作气压(mbar)",
+        "unit": "mbar",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "气体与气压"
+      },
+      {
+        "key": "substrate_temperature_c",
+        "label": "沉积温度(°C)",
+        "unit": "°C",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "温度与几何"
+      },
+      {
+        "key": "temperature_basis",
+        "label": "温度定义",
+        "unit": "",
+        "type": "enum",
+        "priority": "P1",
+        "definition": "chuck_setpoint/substrate_measured/heater/room_temp/unknown",
+        "group": "温度与几何"
+      },
+      {
+        "key": "substrate_bias_v",
+        "label": "基底偏压(V)",
+        "unit": "V",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "温度与几何"
+      },
+      {
+        "key": "substrate_rf_power_w",
+        "label": "基底RF功率(W)",
+        "unit": "W",
+        "type": "number",
+        "priority": "P2",
+        "definition": "与基底电压区分",
+        "group": "温度与几何"
+      },
+      {
+        "key": "target_substrate_distance_mm",
+        "label": "靶基距离(mm)",
+        "unit": "mm",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "温度与几何"
+      },
+      {
+        "key": "target_angle_deg",
+        "label": "溅射角度(°)",
+        "unit": "degree",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "温度与几何"
+      },
+      {
+        "key": "substrate_rotation_rpm",
+        "label": "基底转速(rpm)",
+        "unit": "rpm",
+        "type": "number",
+        "priority": "P2",
+        "definition": "原文未给单位时不自动认定 rpm",
+        "group": "温度与几何"
+      },
+      {
+        "key": "presputter_time_min",
+        "label": "预溅射时间(min)",
+        "unit": "min",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "时间与脉冲"
+      },
+      {
+        "key": "deposition_time_min",
+        "label": "AlScN沉积时长(min)",
+        "unit": "min",
+        "type": "number",
+        "priority": "P1",
+        "definition": "不混入电极沉积时间",
+        "group": "时间与脉冲"
+      },
+      {
+        "key": "deposition_rate_nm_min",
+        "label": "沉积速率(nm/min)",
+        "unit": "nm/min",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "时间与脉冲"
+      },
+      {
+        "key": "pulse_frequency_khz",
+        "label": "溅射脉冲频率(kHz)",
+        "unit": "kHz",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "时间与脉冲"
+      },
+      {
+        "key": "pulse_duty_cycle_pct",
+        "label": "溅射占空比(%)",
+        "unit": "%",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "时间与脉冲"
+      },
+      {
+        "key": "anneal_temperature_c",
+        "label": "后退火温度(°C)",
+        "unit": "°C",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "后处理与备注"
+      },
+      {
+        "key": "anneal_time_min",
+        "label": "后退火时间(min)",
+        "unit": "min",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "后处理与备注"
+      },
+      {
+        "key": "anneal_atmosphere",
+        "label": "后退火气氛",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "后处理与备注"
+      },
+      {
+        "key": "remarks",
+        "label": "备注",
+        "unit": "",
+        "type": "string",
+        "priority": "P2",
+        "definition": "特殊工艺、来源歧义及异常说明",
+        "group": "后处理与备注"
+      }
+    ],
+    "targets": [
+      {
+        "key": "target_record_id",
+        "label": "靶材记录ID",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "",
+        "group": "靶材明细"
+      },
+      {
+        "key": "record_id",
+        "label": "工艺记录ID",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "",
+        "group": "靶材明细"
+      },
+      {
+        "key": "target_index",
+        "label": "靶材序号",
+        "unit": "",
+        "type": "integer",
+        "priority": "P0",
+        "definition": "1、2、3…，不限制数量",
+        "group": "靶材明细"
+      },
+      {
+        "key": "layer_role",
+        "label": "对应膜层",
+        "unit": "",
+        "type": "enum",
+        "priority": "P0",
+        "definition": "AlScN / seed / bottom_electrode / top_electrode",
+        "group": "靶材明细"
+      },
+      {
+        "key": "target_material",
+        "label": "靶材材料",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "靶材明细"
+      },
+      {
+        "key": "target_composition",
+        "label": "靶材标称成分",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "靶材明细"
+      },
+      {
+        "key": "target_sc_at_pct",
+        "label": "靶材Sc含量(at.%)",
+        "unit": "at.%",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "靶材明细"
+      },
+      {
+        "key": "target_power_w",
+        "label": "靶材功率(W)",
+        "unit": "W",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "靶材明细"
+      },
+      {
+        "key": "power_basis",
+        "label": "靶功率语义",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "target_power / sputter_power / power_density / bias_power / etch_power / unknown",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "reported_power_text",
+        "label": "功率原文",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "保存原文短语，例如 target power / sputter power / 6 kW",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "power_mode",
+        "label": "电源模式",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "靶材明细"
+      },
+      {
+        "key": "sputtering_mode",
+        "label": "溅射电源模式",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "RF / DC / pulsed DC / HiPIMS；从 recipe 继承",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "power_statistic",
+        "label": "功率统计口径",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "average / peak / rated / unknown；仅记录原文明确口径",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "equipment_model",
+        "label": "设备型号",
+        "unit": "",
+        "type": "string",
+        "priority": "P2",
+        "definition": "从 recipe 继承，便于设备分层",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "deposition_rate_nm_min",
+        "label": "沉积速率(nm/min)",
+        "unit": "nm/min",
+        "type": "number",
+        "priority": "P2",
+        "definition": "从 recipe 继承；用于比较实际沉积结果",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "target_voltage_v",
+        "label": "靶电压(V)",
+        "unit": "V",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "靶材明细"
+      },
+      {
+        "key": "target_current_a",
+        "label": "靶电流(A)",
+        "unit": "A",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "靶材明细"
+      },
+      {
+        "key": "target_diameter_mm",
+        "label": "靶材直径(mm)",
+        "unit": "mm",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "靶材明细"
+      },
+      {
+        "key": "target_diameter_inch",
+        "label": "靶材直径(inch)",
+        "unit": "inch",
+        "type": "number",
+        "priority": "P1",
+        "definition": "由 mm 换算或原文英寸；用于名义功率密度",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "power_density_w_cm2",
+        "label": "名义功率密度(W/cm²)",
+        "unit": "W/cm²",
+        "type": "number",
+        "priority": "P1",
+        "definition": "P / (π(d/2)^2)，仅直径已知时计算；不是实测功率密度",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "diameter_evidence_id",
+        "label": "靶径证据ID",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "靶径字段证据；用于审核页追溯",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "density_evidence_id",
+        "label": "密度证据ID",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "名义密度使用的功率证据",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "density_formula",
+        "label": "密度公式",
+        "unit": "",
+        "type": "string",
+        "priority": "P2",
+        "definition": "P/(π(d/2)^2)；d 为靶径",
+        "group": "方法与功率语义"
+      },
+      {
+        "key": "target_purity_pct",
+        "label": "靶材纯度(%)",
+        "unit": "%",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "靶材明细"
+      },
+      {
+        "key": "evidence_id",
+        "label": "证据ID",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "靶材明细"
+      }
+    ],
+    "measurements": [
+      {
+        "key": "measurement_id",
+        "label": "性能记录ID",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "",
+        "group": "性能记录"
+      },
+      {
+        "key": "record_id",
+        "label": "工艺记录ID",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "",
+        "group": "性能记录"
+      },
+      {
+        "key": "sample_id",
+        "label": "样品ID",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "性能记录"
+      },
+      {
+        "key": "property_key",
+        "label": "性能字段",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "Pr/2Pr/Ec/FWHM/RMS/stress/d33_f/leakage_J 等",
+        "group": "性能记录"
+      },
+      {
+        "key": "property_value",
+        "label": "性能数值",
+        "unit": "",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "性能记录"
+      },
+      {
+        "key": "property_unit",
+        "label": "性能单位",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "性能记录"
+      },
+      {
+        "key": "measurement_method",
+        "label": "测试方法",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "PUND/P-E/XRD/AFM/DBLI 等",
+        "group": "性能记录"
+      },
+      {
+        "key": "test_temperature_c",
+        "label": "测试温度(°C)",
+        "unit": "°C",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "性能记录"
+      },
+      {
+        "key": "test_frequency_hz",
+        "label": "测试频率(Hz)",
+        "unit": "Hz",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "性能记录"
+      },
+      {
+        "key": "electrode_area_um2",
+        "label": "测试电极面积(μm²)",
+        "unit": "μm²",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "性能记录"
+      },
+      {
+        "key": "test_waveform",
+        "label": "测试波形",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "性能记录"
+      },
+      {
+        "key": "test_conditions",
+        "label": "其他测试条件",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "性能记录"
+      },
+      {
+        "key": "evidence_id",
+        "label": "证据ID",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "",
+        "group": "性能记录"
+      },
+      {
+        "key": "review_status",
+        "label": "审核状态",
+        "unit": "",
+        "type": "enum",
+        "priority": "P0",
+        "definition": "",
+        "group": "性能记录"
+      }
+    ],
+    "evidence": [
+      {
+        "key": "evidence_id",
+        "label": "证据ID",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "",
+        "group": "证据记录"
+      },
+      {
+        "key": "record_id",
+        "label": "工艺记录ID",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "",
+        "group": "证据记录"
+      },
+      {
+        "key": "entity_type",
+        "label": "实体类型",
+        "unit": "",
+        "type": "enum",
+        "priority": "P0",
+        "definition": "recipe/target/sample/measurement",
+        "group": "证据记录"
+      },
+      {
+        "key": "entity_id",
+        "label": "实体ID",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "",
+        "group": "证据记录"
+      },
+      {
+        "key": "field_key",
+        "label": "关联字段Key",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "",
+        "group": "证据记录"
+      },
+      {
+        "key": "paper_doi",
+        "label": "论文DOI",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "",
+        "group": "证据记录"
+      },
+      {
+        "key": "source_url",
+        "label": "原始来源链接",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "证据记录"
+      },
+      {
+        "key": "source_section",
+        "label": "原文章节",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "证据记录"
+      },
+      {
+        "key": "page_table_figure",
+        "label": "页码/表格/图号",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "证据记录"
+      },
+      {
+        "key": "evidence_text",
+        "label": "证据原文",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "最小充分原文片段",
+        "group": "证据记录"
+      },
+      {
+        "key": "raw_value",
+        "label": "原始值",
+        "unit": "",
+        "type": "string",
+        "priority": "P0",
+        "definition": "包含范围和特殊符号",
+        "group": "证据记录"
+      },
+      {
+        "key": "raw_unit",
+        "label": "原始单位",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "证据记录"
+      },
+      {
+        "key": "normalized_value",
+        "label": "标准化数值",
+        "unit": "",
+        "type": "number",
+        "priority": "P1",
+        "definition": "",
+        "group": "证据记录"
+      },
+      {
+        "key": "normalized_unit",
+        "label": "标准单位",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "证据记录"
+      },
+      {
+        "key": "evidence_status",
+        "label": "证据类型",
+        "unit": "",
+        "type": "enum",
+        "priority": "P0",
+        "definition": "reported/derived/ambiguous/not_reported",
+        "group": "证据记录"
+      },
+      {
+        "key": "derivation_note",
+        "label": "换算或歧义说明",
+        "unit": "",
+        "type": "string",
+        "priority": "P1",
+        "definition": "",
+        "group": "证据记录"
+      }
+    ]
+  },
+  "original_header_mapping": [
+    {
+      "original_header": "样品编号",
+      "canonical_mapping": "sample_id",
+      "note": "论文样品ID重新定义，不能照抄公司样品编号",
+      "type": "映射"
+    },
+    {
+      "original_header": "方案",
+      "canonical_mapping": "target_configuration 或 sputtering_mode",
+      "note": "内部 A/B/C 分组不直接等于物理工艺",
+      "type": "内部字段"
+    },
+    {
+      "original_header": "衬底类型",
+      "canonical_mapping": "substrate_material;substrate_orientation;substrate_stack",
+      "note": "分离材料、晶向和叠层；保留原文",
+      "type": "拆分"
+    },
+    {
+      "original_header": "衬底信息（如N/P型Si，掺杂浓度等）",
+      "canonical_mapping": "substrate_doping",
+      "note": "保留掺杂浓度和导电类型",
+      "type": "映射"
+    },
+    {
+      "original_header": "样品类型",
+      "canonical_mapping": "sample_type",
+      "note": "区分薄膜与器件",
+      "type": "映射"
+    },
+    {
+      "original_header": "顶电极材料",
+      "canonical_mapping": "top_electrode_material",
+      "note": "顶电极不要与 AlScN 溅射靶混淆",
+      "type": "映射"
+    },
+    {
+      "original_header": "底电极材料",
+      "canonical_mapping": "bottom_electrode_material",
+      "note": "保留材料和织构信息",
+      "type": "映射"
+    },
+    {
+      "original_header": "顶电极厚度(nm)",
+      "canonical_mapping": "top_electrode_thickness_nm",
+      "note": "nm",
+      "type": "映射"
+    },
+    {
+      "original_header": "膜层厚度(nm)",
+      "canonical_mapping": "alscn_thickness_nm",
+      "note": "确认仅为 AlScN 功能层厚度",
+      "type": "核实"
+    },
+    {
+      "original_header": "底电极厚度(nm)",
+      "canonical_mapping": "bottom_electrode_thickness_nm",
+      "note": "nm",
+      "type": "映射"
+    },
+    {
+      "original_header": "顶电极制备方式（如光刻/硬掩膜）",
+      "canonical_mapping": "top_electrode_patterning",
+      "note": "光刻/硬掩膜",
+      "type": "映射"
+    },
+    {
+      "original_header": "Al(W)",
+      "canonical_mapping": "targets[].target_material=Al;target_power_w",
+      "note": "根据实际靶编号映射靶材1/2",
+      "type": "拆分"
+    },
+    {
+      "original_header": "Sc(W)",
+      "canonical_mapping": "targets[].target_material=Sc;target_power_w",
+      "note": "根据实际靶编号映射靶材1/2",
+      "type": "拆分"
+    },
+    {
+      "original_header": "AlSc(W)/电压",
+      "canonical_mapping": "targets[].target_material=AlSc;target_power_w 或 target_voltage_v",
+      "note": "原列混用功率/电压；需证据判断",
+      "type": "歧义"
+    },
+    {
+      "original_header": "AlN(W)/电压",
+      "canonical_mapping": "targets[].target_material=AlN;target_power_w 或 target_voltage_v",
+      "note": "还需确认对应 AlScN、seed 或其他层",
+      "type": "歧义"
+    },
+    {
+      "original_header": "AISc(W)",
+      "canonical_mapping": "targets[].target_material;target_power_w",
+      "note": "AISc 疑似 AlSc 笔误，未经核对不修正",
+      "type": "歧义"
+    },
+    {
+      "original_header": "N2(sccm)",
+      "canonical_mapping": "n2_flow_sccm",
+      "note": "sccm",
+      "type": "映射"
+    },
+    {
+      "original_header": "Ar2(sccm)",
+      "canonical_mapping": "ar_flow_sccm",
+      "note": "Ar2 疑似 Ar 标记问题，需核对",
+      "type": "核实"
+    },
+    {
+      "original_header": "制备温度(°C)",
+      "canonical_mapping": "substrate_temperature_c;temperature_basis",
+      "note": "记录温度定义与测量位置",
+      "type": "拆分"
+    },
+    {
+      "original_header": "基底偏压",
+      "canonical_mapping": "substrate_bias_v;substrate_rf_power_w",
+      "note": "V 与 W 必须分开",
+      "type": "拆分"
+    },
+    {
+      "original_header": "靶截距(cm)",
+      "canonical_mapping": "target_substrate_distance_mm",
+      "note": "确认该列含义后 cm×10 转为 mm",
+      "type": "核实"
+    },
+    {
+      "original_header": "溅射角度（若有）",
+      "canonical_mapping": "target_angle_deg",
+      "note": "确认几何角度定义",
+      "type": "核实"
+    },
+    {
+      "original_header": "基底转速",
+      "canonical_mapping": "substrate_rotation_rpm",
+      "note": "原表未标注单位；不得默认 rpm",
+      "type": "核实"
+    },
+    {
+      "original_header": "预溅射时间（min）",
+      "canonical_mapping": "presputter_time_min",
+      "note": "min",
+      "type": "映射"
+    },
+    {
+      "original_header": "总沉积时长（min）",
+      "canonical_mapping": "deposition_time_min",
+      "note": "仅关联 AlScN 生长时间",
+      "type": "核实"
+    },
+    {
+      "original_header": "本底真空度(mbar)",
+      "canonical_mapping": "base_pressure_mbar",
+      "note": "mbar",
+      "type": "映射"
+    },
+    {
+      "original_header": "工作气压(mbar)",
+      "canonical_mapping": "working_pressure_mbar",
+      "note": "mbar",
+      "type": "映射"
+    },
+    {
+      "original_header": "电压",
+      "canonical_mapping": "target_voltage_v 或 substrate_bias_v",
+      "note": "区分靶电压与基底偏压",
+      "type": "歧义"
+    },
+    {
+      "original_header": "电流",
+      "canonical_mapping": "target_current_a",
+      "note": "区分靶材或电源",
+      "type": "歧义"
+    },
+    {
+      "original_header": "脉冲频率(kHz)",
+      "canonical_mapping": "pulse_frequency_khz",
+      "note": "仅沉积电源频率，不是性能测试频率",
+      "type": "映射"
+    },
+    {
+      "original_header": "设备型号",
+      "canonical_mapping": "equipment_model",
+      "note": "原样保留",
+      "type": "映射"
+    },
+    {
+      "original_header": "占空比（电信号相关，若有请提供）",
+      "canonical_mapping": "pulse_duty_cycle_pct",
+      "note": "确认是否溅射电源占空比",
+      "type": "核实"
+    },
+    {
+      "original_header": "备注（重点需要做哪些测试）",
+      "canonical_mapping": "remarks",
+      "note": "内部计划不作为外部论文参数",
+      "type": "内部字段"
+    },
+    {
+      "original_header": "异常记录",
+      "canonical_mapping": "remarks",
+      "note": "保留描述，不进行自动推断",
+      "type": "映射"
+    },
+    {
+      "original_header": "归属（Pilot/Medium/Stable-A/B/C）",
+      "canonical_mapping": "—",
+      "note": "内部管理分组，文献库不需要",
+      "type": "内部字段"
+    }
+  ],
+  "known_issues": [
+    "Six repeated header sections with columns shifting",
+    "AlSc(W)/电压 mixes units",
+    "Ar2(sccm) and 靶截距(cm) require human confirmation"
+  ]
+}

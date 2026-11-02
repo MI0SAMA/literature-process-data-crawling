@@ -1,0 +1,3 @@
+﻿test_id,role,year,doi,title_guess,folder,path,in_corpus
+OD-01,deposition,2024,10.0000/example,Example AlScN paper,AlScN,<OneDrive>/Paper/AlScN/example.pdf,no
+OD-02,theory_or_review,2023,10.0000/example2,Example review,ferroelectric,<OneDrive>/Paper/ferroelectric/example2.pdf,no

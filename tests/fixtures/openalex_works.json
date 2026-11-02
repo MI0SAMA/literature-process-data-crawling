@@ -1,0 +1,90 @@
+{
+  "meta": {
+    "count": 10,
+    "db_response_time_ms": 12,
+    "page": 1,
+    "per_page": 2
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W2963000001",
+      "doi": "https://doi.org/10.1063/1.5084945",
+      "title": "AlScN: A III-V semiconductor based ferroelectric",
+      "publication_year": 2019,
+      "publication_date": "2019-03-21",
+      "type": "article",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "Oliver Fichtner",
+            "orcid": "https://orcid.org/0000-0001-2345-6789"
+          },
+          "raw_author_name": "Oliver Fichtner",
+          "author_position": "first"
+        },
+        {
+          "author": {
+            "display_name": "Simon Wolff",
+            "orcid": null
+          },
+          "raw_author_name": "Simon Wolff",
+          "author_position": "middle"
+        }
+      ],
+      "primary_location": {
+        "landing_page_url": "https://doi.org/10.1063/1.5084945",
+        "pdf_url": null,
+        "source": {
+          "display_name": "Journal of Applied Physics"
+        }
+      },
+      "open_access": {
+        "is_oa": false,
+        "oa_status": "closed"
+      },
+      "abstract_inverted_index": {
+        "AlScN": [0],
+        "films": [1],
+        "are": [2],
+        "ferroelectric.": [3]
+      },
+      "language": "en"
+    },
+    {
+      "id": "https://openalex.org/W2963000002",
+      "doi": null,
+      "title": "Reactive magnetron sputtering of ScAlN thin films",
+      "publication_year": 2021,
+      "publication_date": "2021-01-10",
+      "type": "article",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "Marta Clement",
+            "orcid": null
+          },
+          "raw_author_name": "Marta Clement",
+          "author_position": "first"
+        }
+      ],
+      "primary_location": {
+        "landing_page_url": "https://example.org/scaln",
+        "pdf_url": "https://example.org/scaln.pdf",
+        "source": {
+          "display_name": "Surface and Coatings Technology"
+        }
+      },
+      "open_access": {
+        "is_oa": true,
+        "oa_status": "green"
+      },
+      "abstract_inverted_index": {
+        "ScAlN": [0],
+        "films": [1],
+        "were": [2],
+        "sputtered.": [3]
+      },
+      "language": "en"
+    }
+  ]
+}

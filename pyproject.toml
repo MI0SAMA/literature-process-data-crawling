@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "alscn-pvd-literature"
+version = "0.4.0"
+description = "AlScN/ScAlN PVD literature discovery, deduplication and relevance screening (Phase 2)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["PyYAML>=6.0", "requests>=2.31", "lxml>=5.0", "pypdf>=4.0", "openpyxl>=3.1"]
+
+[project.optional-dependencies]
+test = ["reportlab>=4.0"]
+
+[project.scripts]
+alscn-pvd = "app.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["app*"]

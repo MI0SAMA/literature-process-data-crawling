@@ -1,0 +1,132 @@
+# AlScN-PVD Phase 2 discovery configuration.
+# Query strings are deliberately plain text: OpenAlex and Crossref relevance
+# engines differ, and boolean syntax is not portable across both.
+
+project:
+  name: AlScN-PVD Literature Discovery
+  phase: 2
+  schema_version: 1.0.0
+
+defaults:
+  databases: [openalex, crossref]
+  max_results_per_query: 100
+  page_size: 50
+  from_year: 2005
+  to_year: null
+  cache_ttl_hours: 168
+  request_timeout_seconds: 20
+  rate_limit_seconds:
+    openalex: 0.20
+    crossref: 0.60
+  retry:
+    max_attempts: 3
+    base_delay_seconds: 1.0
+    max_delay_seconds: 8.0
+  user_agent: "AlScN-PVD-Literature/0.2"
+  mailto: "${ALSCN_CONTACT_EMAIL}"
+
+# The default plan is broad on purpose. Recall is protected by several
+# material-name variants; the rule screener removes off-topic records later.
+# Do not remove the broad "AlScN" and "AlScN thin films" queries: they catch
+# classic papers that ranked below narrow "sputtering" queries.
+queries:
+  - id: q01_alscn_sputtering
+    query: "AlScN sputtering"
+  - id: q02_alscn_thin_films
+    query: "AlScN thin films"
+  - id: q03_alscn_broad
+    query: "AlScN"
+  - id: q04_scaln_sputtering
+    query: "ScAlN sputtering"
+  - id: q05_scandium_aluminum_nitride
+    query: "scandium aluminum nitride sputtering"
+  - id: q06_sc_doped_aln
+    query: "Sc-doped AlN sputtering"
+  - id: q07_al1xscxn
+    query: "Al1-xScxN sputtering"
+  - id: q08_scxal1xn
+    query: "ScxAl1-xN sputtering"
+  - id: q09_alscn_reactive
+    query: "AlScN reactive sputtering"
+  - id: q10_alscn_magnetron
+    query: "AlScN magnetron sputtering"
+  - id: q11_alscn_cosputter
+    query: "AlScN co-sputtering"
+  - id: q12_alscn_pulsed_dc
+    query: "AlScN pulsed DC sputtering"
+  - id: q13_alscn_rf
+    query: "AlScN RF sputtering"
+  - id: q14_scaln_magnetron
+    query: "scandium aluminum nitride magnetron sputtering"
+
+screening:
+  # Title/abstract classification labels: likely_AlScN_PVD, unclear, not_relevant.
+  material_patterns:
+    - '\balscn\b'
+    - '\bscaln\b'
+    - '\bal\s*[-_ ]?\s*sc\s*[-_ ]?\s*n\b'
+    - '\bsc\s*[-_ ]?\s*al\s*[-_ ]?\s*n\b'
+    - '\bal\s*\(?1\s*-\s*x\)?\s*sc\s*\(?x\)?\s*n\b'
+    - '\bsc\s*\(?x\)?\s*al\s*\(?1\s*-\s*x\)?\s*n\b'
+    - '\bscandium[\s\-]+alumini?um[\s\-]+nitride\b'
+    - '\balumini?um[\s\-]+scandium[\s\-]+nitride\b'
+    - '\bsc[\s\-]*doped\s+aln\b'
+    - '\bsc[\s\-]*doped\s+alumini?um[\s\-]+nitride\b'
+    - '\bscandium[\s\-]*doped\s+alumini?um[\s\-]+nitride\b'
+    - '\baln\s*:\s*sc\b'
+    - '\bsc\s*:\s*aln\b'
+  method_patterns:
+    - '\bsputter(?:ing|ed)?\b'
+    - '\bmagnetron\b'
+    - '\bco[\s\-]?sputter(?:ing|ed)?\b'
+    - '\breactive\s+(?:magnetron\s+)?sputter(?:ing|ed)?\b'
+    - '\bphysical\s+vapou?r\s+deposition\b'
+    - '\bpvd\b'
+    - '\b(?:rf|dc|pulsed[\s\-]?dc)\s+(?:magnetron\s+)?sputter(?:ing|ed)?\b'
+    - '\bhipims\b'
+    - '\bion[\s\-]+beam\s+sputter(?:ing|ed)?\b'
+    - '\bpld\b'
+    - '\bpulsed[\s\-]+laser\s+deposition\b'
+  review_patterns:
+    - '^\s*review\b'
+    - '\ba\s+review\b'
+    - '\breview\s+article\b'
+    - '\bperspective\b'
+    - '\boverview\b'
+    - '\bstate[\s\-]+of[\s\-]+the[\s\-]+art\b'
+  electrode_patterns:
+    - '\belectrodes?\b'
+    - '\bmetal[\s\-]+insulator[\s\-]+metal\b'
+  functional_layer_patterns:
+    - '\bfilms?\b'
+    - '\blayers?\b'
+    - '\bthin[\s\-]+film\b'
+    - '\bferroelectric\b'
+    - '\bpiezoelectric\b'
+    - '\bresonators?\b'
+    - '\bmembranes?\b'
+    - '\btransducers?\b'
+    - '\bheterostructures?\b'
+  non_pvd_method_patterns:
+    - '\bmocvd\b'
+    - '\bmetal[\s\-]+organic\s+chemical\s+vapou?r\s+deposition\b'
+    - '\bmbe\b'
+    - '\bmolecular[\s\-]+beam\s+epitaxy\b'
+    - '\bald\b'
+    - '\batomic[\s\-]+layer\s+deposition\b'
+    - '\bcvd\b'
+    - '\bchemical\s+vapou?r\s+deposition\b'
+    - '\bsol[\s\-]?gel\b'
+    - '\belectrodeposition\b'
+  fuzzy_auto_merge_threshold: 0.90
+  fuzzy_review_threshold: 0.45
+
+llm:
+  # Disabled by default. Enable with: --classifier llm
+  # Only title + abstract are sent, never internal 147-sample process values.
+  provider: openai_compatible
+  base_url: "${ALSCN_LLM_BASE_URL}"
+  model: "${ALSCN_LLM_MODEL}"
+  api_key_env: ALSCN_LLM_API_KEY
+  timeout_seconds: 45
+  prompt_version: phase2-title-abstract-v1

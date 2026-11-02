@@ -1,0 +1,51 @@
+{
+  "status": "ok",
+  "message-type": "work-list",
+  "message-version": "1.0.0",
+  "message": {
+    "total-results": 2,
+    "items-per-page": 2,
+    "items": [
+      {
+        "DOI": "10.1063/1.5084945",
+        "title": ["AlScN: A III-V semiconductor based ferroelectric"],
+        "abstract": "<jats:p>AlScN films are ferroelectric.</jats:p>",
+        "author": [
+          {
+            "given": "Oliver",
+            "family": "Fichtner",
+            "sequence": "first"
+          },
+          {
+            "given": "Simon",
+            "family": "Wolff",
+            "sequence": "additional"
+          }
+        ],
+        "published-print": {
+          "date-parts": [[2019, 3, 21]]
+        },
+        "container-title": ["Journal of Applied Physics"],
+        "type": "journal-article",
+        "URL": "https://doi.org/10.1063/1.5084945",
+        "resource": {
+          "primary": {
+            "URL": "https://pubs.aip.org/aip/jap/article/125/11/114103"
+          }
+        },
+        "link": [
+          {
+            "URL": "https://example.org/paper.pdf",
+            "content-type": "application/pdf"
+          }
+        ]
+      },
+      {
+        "DOI": "10.1109/OJUFFC.2026.3738336/mm1",
+        "title": ["Determining the Impact of Sputtering Mode_supp1.docx"],
+        "type": "component",
+        "URL": "https://doi.org/10.1109/OJUFFC.2026.3738336/mm1"
+      }
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "entries": [
+    {
+      "source": "openalex",
+      "url": "https://api.openalex.org/works?search=AlScN+sputtering&per-page=25&page=1&select=id%2Cdoi%2Ctitle%2Cdisplay_name%2Cpublication_year%2Cpublication_date%2Ctype%2Cauthorships%2Cprimary_location%2Copen_access%2Cabstract_inverted_index%2Clanguage&filter=from_publication_date%3A2005-01-01",
+      "file": "openalex_alscn_sputtering_p1.json",
+      "status": 200,
+      "expires_at": "2099-01-01T00:00:00+00:00"
+    },
+    {
+      "source": "openalex",
+      "url": "https://api.openalex.org/works?search=AlScN+thin+films&per-page=25&page=1&select=id%2Cdoi%2Ctitle%2Cdisplay_name%2Cpublication_year%2Cpublication_date%2Ctype%2Cauthorships%2Cprimary_location%2Copen_access%2Cabstract_inverted_index%2Clanguage&filter=from_publication_date%3A2005-01-01",
+      "file": "openalex_alscn_thin_films_p1.json",
+      "status": 200,
+      "expires_at": "2099-01-01T00:00:00+00:00"
+    },
+    {
+      "source": "openalex",
+      "url": "https://api.openalex.org/works?search=AlScN&per-page=25&page=1&select=id%2Cdoi%2Ctitle%2Cdisplay_name%2Cpublication_year%2Cpublication_date%2Ctype%2Cauthorships%2Cprimary_location%2Copen_access%2Cabstract_inverted_index%2Clanguage&filter=from_publication_date%3A2005-01-01",
+      "file": "openalex_alscn_p1.json",
+      "status": 200,
+      "expires_at": "2099-01-01T00:00:00+00:00"
+    }
+  ]
+}

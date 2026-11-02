@@ -1,0 +1,10 @@
+doi,title,expected_label
+10.1016/j.apsusc.2026.168566,Homogeneous N-polar AlScN sputtered films using a single AlSc alloy target,likely_AlScN_PVD
+10.1103/physrevmaterials.5.035001,Stability and residual stresses of sputtered wurtzite AlScN thin films,likely_AlScN_PVD
+10.1016/j.surfcoat.2016.11.083,Effect of scandium content on structure and piezoelectric properties of AlScN films deposited by reactive pulse magnetron sputtering,likely_AlScN_PVD
+10.1063/5.0035335,Room-temperature deposition of a poling-free ferroelectric AlScN film by reactive sputtering,likely_AlScN_PVD
+10.1109/jmems.2022.3161055,High Quality Co-Sputtering AlScN Thin Films for Piezoelectric Lamb-Wave Resonators,likely_AlScN_PVD
+10.1063/1.5084945,AlScN: A III-V semiconductor based ferroelectric,unclear
+10.1038/s41467-025-62904-6,Decoupling polarization and coercive field in AlScN/AlN/AlScN stack,unclear
+10.1021/acs.cgd.5c01422,Metal-Organic Chemical Vapor Deposition of AlScN Thin Films,unclear
+10.1007/s40820-024-01441-1,New-Generation Ferroelectric AlScN Materials,not_relevant
