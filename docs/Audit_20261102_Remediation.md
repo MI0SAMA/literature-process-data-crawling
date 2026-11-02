@@ -95,7 +95,7 @@ python -m app.cli export --mode approved --output formal.xlsx
 
 ```text
 python -m unittest discover -s tests -p "test_*.py"
-Ran 188 tests
+Ran 190 tests
 OK
 ```
 
