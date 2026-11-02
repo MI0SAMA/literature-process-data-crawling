@@ -1,4 +1,5 @@
 # AlScN-PVD 文献数据库：阶段 2–7
+> GitHub: https://github.com/MI0SAMA/literature-process-data-crawling
 
 > **审计状态（2026-10-30）**：当前 `corpus.sqlite3` 中全部 71 条 recipe 已隔离为 `needs_review`，不能直接用于工程决策。修复与未修复项见 [`docs/AUDIT_REMEDIATION.md`](docs/AUDIT_REMEDIATION.md)。
 
